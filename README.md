@@ -85,7 +85,7 @@ Download `index.html` and open in any modern browser. No server needed.
 
 ## 💼 About This Project
 
-Built by **Karar Syed** as part of a customer success portfolio to demonstrate practical CSM skills beyond certifications. The dataset is simulated but reflects real CSM workflows used at SaaS companies including LogicMonitor, LeanTaaS, Jamf, and others.
+Built by **Karar Syed** as part of a customer success portfolio to demonstrate practical CSM skills beyond certifications. The dataset is simulated but reflects real CSM workflows used at SaaS companies.
 
 **Certifications backing these skills:**
 - Google Advanced Data Analytics
