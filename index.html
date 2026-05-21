@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSM Health Score Dashboard — Karar Syed</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2236;
+    --border: rgba(255,255,255,0.07);
+    --accent: #00e5be;
+    --accent2: #6366f1;
+    --accent3: #f59e0b;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --success: #10b981;
+    --text: #f1f5f9;
+    --muted: #64748b;
+    --muted2: #94a3b8;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,190,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,190,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; }
+
+  /* HEADER */
+  header {
+    padding: 24px 40px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(10,14,26,0.8);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 14px;
+    color: #fff;
+  }
+
+  .logo-text {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: -0.3px;
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .header-badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(0,229,190,0.08);
+    border: 1px solid rgba(0,229,190,0.2);
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  .last-updated {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+  }
+
+  /* MAIN */
+  main { padding: 32px 40px; max-width: 1400px; margin: 0 auto; }
+
+  /* PAGE TITLE */
+  .page-title {
+    margin-bottom: 32px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .page-title h1 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+
+  .page-title p {
+    color: var(--muted2);
+    font-size: 14px;
+  }
+
+  /* SUMMARY CARDS */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.5s ease both;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+
+  .summary-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255,255,255,0.12);
+  }
+
+  .summary-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .summary-card.green::after { background: var(--success); }
+  .summary-card.yellow::after { background: var(--warning); }
+  .summary-card.red::after { background: var(--danger); }
+  .summary-card.blue::after { background: var(--accent2); }
+
+  .card-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .card-value {
+    font-family: var(--font-display);
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .card-value.green { color: var(--success); }
+  .card-value.yellow { color: var(--warning); }
+  .card-value.red { color: var(--danger); }
+  .card-value.blue { color: var(--accent2); }
+
+  .card-change {
+    font-size: 12px;
+    color: var(--muted2);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .card-change .up { color: var(--success); }
+  .card-change .down { color: var(--danger); }
+
+  /* GRID LAYOUT */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .panel-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .panel-title {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+  }
+
+  .panel-sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    margin-top: 2px;
+  }
+
+  .panel-badge {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.05);
+    color: var(--muted2);
+    border: 1px solid var(--border);
+  }
+
+  /* ACCOUNT TABLE */
+  .account-table { width: 100%; }
+
+  .table-filters {
+    padding: 12px 20px;
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .filter-btn {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted2);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+
+  .filter-btn.active, .filter-btn:hover {
+    background: rgba(0,229,190,0.1);
+    border-color: rgba(0,229,190,0.3);
+    color: var(--accent);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead th {
+    padding: 10px 20px;
+    text-align: left;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.03); }
+  tbody tr.selected { background: rgba(0,229,190,0.05); }
+
+  td {
+    padding: 12px 20px;
+    font-size: 13px;
+  }
+
+  .account-name {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 2px;
+  }
+
+  .account-tier {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+  }
+
+  /* HEALTH SCORE PILL */
+  .health-score {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .health-score.healthy {
+    background: rgba(16,185,129,0.12);
+    color: var(--success);
+    border: 1px solid rgba(16,185,129,0.2);
+  }
+
+  .health-score.at-risk {
+    background: rgba(245,158,11,0.12);
+    color: var(--warning);
+    border: 1px solid rgba(245,158,11,0.2);
+  }
+
+  .health-score.critical {
+    background: rgba(239,68,68,0.12);
+    color: var(--danger);
+    border: 1px solid rgba(239,68,68,0.2);
+  }
+
+  .health-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .healthy .health-dot { background: var(--success); }
+  .at-risk .health-dot { background: var(--warning); }
+  .critical .health-dot { background: var(--danger); animation: pulse 1.5s infinite; }
+
+  /* MINI BAR */
+  .mini-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mini-bar-bg {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+    min-width: 60px;
+  }
+
+  .mini-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+
+  .mini-bar-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted2);
+    min-width: 28px;
+    text-align: right;
+  }
+
+  /* RENEWAL BADGE */
+  .renewal-badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 3px 7px;
+    border-radius: 4px;
+  }
+
+  .renewal-badge.soon {
+    background: rgba(239,68,68,0.12);
+    color: var(--danger);
+    border: 1px solid rgba(239,68,68,0.2);
+  }
+
+  .renewal-badge.upcoming {
+    background: rgba(245,158,11,0.1);
+    color: var(--warning);
+    border: 1px solid rgba(245,158,11,0.18);
+  }
+
+  .renewal-badge.ok {
+    background: rgba(255,255,255,0.04);
+    color: var(--muted2);
+    border: 1px solid var(--border);
+  }
+
+  /* SIDEBAR PANELS */
+  .sidebar { display: flex; flex-direction: column; gap: 20px; }
+
+  /* RISK BREAKDOWN */
+  .risk-list { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+
+  .risk-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .risk-label {
+    font-size: 13px;
+    color: var(--muted2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .risk-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .risk-count {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  /* DONUT CHART */
+  .donut-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    gap: 24px;
+  }
+
+  .donut-svg { transform: rotate(-90deg); }
+
+  .donut-legend { display: flex; flex-direction: column; gap: 8px; }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .legend-label { color: var(--muted2); }
+  .legend-val { font-family: var(--font-mono); font-weight: 500; margin-left: auto; padding-left: 12px; }
+
+  /* ACTIVITY FEED */
+  .activity-list { padding: 12px 20px; display: flex; flex-direction: column; gap: 0; }
+
+  .activity-item {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .activity-item:last-child { border-bottom: none; }
+
+  .activity-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .activity-icon.renewal { background: rgba(239,68,68,0.15); }
+  .activity-icon.checkin { background: rgba(0,229,190,0.1); }
+  .activity-icon.risk { background: rgba(245,158,11,0.12); }
+  .activity-icon.expansion { background: rgba(99,102,241,0.15); }
+
+  .activity-text { font-size: 12px; color: var(--muted2); line-height: 1.5; }
+  .activity-text strong { color: var(--text); font-weight: 600; }
+  .activity-time { font-size: 10px; color: var(--muted); font-family: var(--font-mono); margin-top: 3px; }
+
+  /* BOTTOM GRID */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  /* BAR CHART */
+  .bar-chart {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .bar-name {
+    font-size: 11px;
+    color: var(--muted2);
+    width: 110px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: var(--font-mono);
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 20px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1.2s ease;
+    position: relative;
+  }
+
+  .bar-fill::after {
+    content: attr(data-val);
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: rgba(255,255,255,0.7);
+  }
+
+  /* ONBOARDING FUNNEL */
+  .funnel { padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+
+  .funnel-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .funnel-label {
+    font-size: 11px;
+    color: var(--muted2);
+    width: 120px;
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+  }
+
+  .funnel-bar-wrap {
+    flex: 1;
+    height: 28px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .funnel-bar {
+    height: 100%;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: rgba(255,255,255,0.85);
+    transition: width 1.2s ease;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .summary-card:nth-child(1) { animation-delay: 0.05s; }
+  .summary-card:nth-child(2) { animation-delay: 0.1s; }
+  .summary-card:nth-child(3) { animation-delay: 0.15s; }
+  .summary-card:nth-child(4) { animation-delay: 0.2s; }
+
+  /* ACCOUNT DETAIL SLIDE */
+  .detail-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .detail-overlay.open { display: flex; }
+
+  .detail-panel {
+    width: 420px;
+    height: 100vh;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateX(40px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .detail-header {
+    padding: 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .detail-close {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    color: var(--muted2);
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .detail-body { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+
+  .detail-section-title {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .detail-stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .detail-stat {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .detail-stat-label {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .detail-stat-val {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .notes-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 12px;
+    color: var(--muted2);
+    line-height: 1.6;
+  }
+
+  .action-btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: rgba(0,229,190,0.08);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+
+  .action-btn:hover {
+    background: rgba(0,229,190,0.15);
+    border-color: rgba(0,229,190,0.3);
+  }
+
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+
+  .tl-item {
+    display: flex;
+    gap: 12px;
+    padding: 8px 0;
+    position: relative;
+  }
+
+  .tl-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+
+  .tl-line {
+    position: absolute;
+    left: 3px;
+    top: 18px;
+    bottom: -4px;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .tl-item:last-child .tl-line { display: none; }
+
+  .tl-text { font-size: 12px; color: var(--muted2); line-height: 1.5; }
+  .tl-text strong { color: var(--text); }
+  .tl-date { font-size: 10px; color: var(--muted); font-family: var(--font-mono); margin-top: 2px; }
+
+  /* PORTFOLIO STATS STRIP */
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .strip-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .strip-label {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .strip-val {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">KS</div>
+      <div>
+        <div class="logo-text">CSM Portfolio Dashboard</div>
+        <div class="logo-sub">KARAR SYED · CUSTOMER SUCCESS</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="header-badge">● LIVE DEMO</span>
+      <span class="last-updated" id="liveTime"></span>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-title">
+      <h1>Account Health Overview</h1>
+      <p>50-account portfolio · Q2 2025 · Tracking adoption, retention risk, and renewal pipeline</p>
+    </div>
+
+    <!-- SUMMARY CARDS -->
+    <div class="summary-grid">
+      <div class="summary-card green">
+        <div class="card-label">HEALTHY ACCOUNTS</div>
+        <div class="card-value green">32</div>
+        <div class="card-change"><span class="up">↑ 4</span>&nbsp;from last quarter</div>
+      </div>
+      <div class="summary-card yellow">
+        <div class="card-label">AT-RISK ACCOUNTS</div>
+        <div class="card-value yellow">12</div>
+        <div class="card-change"><span class="down">↓ 2</span>&nbsp;intervention in progress</div>
+      </div>
+      <div class="summary-card red">
+        <div class="card-label">CRITICAL / CHURN RISK</div>
+        <div class="card-value red">6</div>
+        <div class="card-change"><span class="down">↑ 1</span>&nbsp;requires immediate action</div>
+      </div>
+      <div class="summary-card blue">
+        <div class="card-label">AVG. HEALTH SCORE</div>
+        <div class="card-value blue">74<span style="font-size:18px;font-weight:400">/100</span></div>
+        <div class="card-change"><span class="up">↑ 6pts</span>&nbsp;vs. Q1 2025</div>
+      </div>
+    </div>
+
+    <!-- STATS STRIP -->
+    <div class="stats-strip">
+      <div class="strip-item">
+        <div class="strip-label">PORTFOLIO ARR</div>
+        <div class="strip-val" style="color:var(--accent)">$2.4M</div>
+      </div>
+      <div class="strip-item">
+        <div class="strip-label">RENEWALS THIS QTR</div>
+        <div class="strip-val" style="color:var(--warning)">11</div>
+      </div>
+      <div class="strip-item">
+        <div class="strip-label">AVG ADOPTION RATE</div>
+        <div class="strip-val">68%</div>
+      </div>
+      <div class="strip-item">
+        <div class="strip-label">NPS SCORE</div>
+        <div class="strip-val" style="color:var(--success)">+52</div>
+      </div>
+      <div class="strip-item">
+        <div class="strip-label">QBRs COMPLETED</div>
+        <div class="strip-val">38/50</div>
+      </div>
+      <div class="strip-item">
+        <div class="strip-label">EXPANSION OPPS</div>
+        <div class="strip-val" style="color:var(--accent2)">7</div>
+      </div>
+    </div>
+
+    <!-- MAIN DASHBOARD GRID -->
+    <div class="dashboard-grid">
+
+      <!-- ACCOUNT TABLE -->
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Account Portfolio</div>
+            <div class="panel-sub">Click any row to view account details</div>
+          </div>
+          <span class="panel-badge">50 ACCOUNTS</span>
+        </div>
+        <div class="table-filters">
+          <button class="filter-btn active" onclick="filterTable('all', this)">All</button>
+          <button class="filter-btn" onclick="filterTable('healthy', this)">Healthy</button>
+          <button class="filter-btn" onclick="filterTable('at-risk', this)">At-Risk</button>
+          <button class="filter-btn" onclick="filterTable('critical', this)">Critical</button>
+        </div>
+        <table id="accountTable">
+          <thead>
+            <tr>
+              <th>Account</th>
+              <th>Health Score</th>
+              <th>Adoption</th>
+              <th>Renewal</th>
+              <th>CSM Action</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- SIDEBAR -->
+      <div class="sidebar">
+
+        <!-- DONUT -->
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Portfolio Breakdown</div>
+              <div class="panel-sub">Health distribution</div>
+            </div>
+          </div>
+          <div class="donut-wrap">
+            <svg class="donut-svg" width="100" height="100" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="14"/>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" stroke-width="14"
+                stroke-dasharray="201 251" stroke-dashoffset="0" stroke-linecap="round"/>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#f59e0b" stroke-width="14"
+                stroke-dasharray="75 251" stroke-dashoffset="-201" stroke-linecap="round"/>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#ef4444" stroke-width="14"
+                stroke-dasharray="38 251" stroke-dashoffset="-276" stroke-linecap="round"/>
+            </svg>
+            <div class="donut-legend">
+              <div class="legend-item">
+                <div class="legend-dot" style="background:var(--success)"></div>
+                <span class="legend-label">Healthy</span>
+                <span class="legend-val" style="color:var(--success)">32</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot" style="background:var(--warning)"></div>
+                <span class="legend-label">At-Risk</span>
+                <span class="legend-val" style="color:var(--warning)">12</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot" style="background:var(--danger)"></div>
+                <span class="legend-label">Critical</span>
+                <span class="legend-val" style="color:var(--danger)">6</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTIVITY FEED -->
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Recent Activity</div>
+              <div class="panel-sub">Last 7 days</div>
+            </div>
+          </div>
+          <div class="activity-list">
+            <div class="activity-item">
+              <div class="activity-icon renewal">🔴</div>
+              <div>
+                <div class="activity-text"><strong>Apex Systems</strong> renewal in 14 days — QBR scheduled</div>
+                <div class="activity-time">2 HOURS AGO</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon checkin">✅</div>
+              <div>
+                <div class="activity-text"><strong>MedCore Health</strong> health check completed — score improved +12pts</div>
+                <div class="activity-time">YESTERDAY</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon risk">⚠️</div>
+              <div>
+                <div class="activity-text"><strong>Nexus Logistics</strong> flagged as churn risk — low login frequency</div>
+                <div class="activity-time">2 DAYS AGO</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon expansion">💡</div>
+              <div>
+                <div class="activity-text"><strong>TechFlow Inc</strong> expansion opportunity identified — referred to AE</div>
+                <div class="activity-time">3 DAYS AGO</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon checkin">✅</div>
+              <div>
+                <div class="activity-text"><strong>Cascade Retail</strong> onboarding completed — entered healthy status</div>
+                <div class="activity-time">5 DAYS AGO</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- BOTTOM GRID -->
+    <div class="bottom-grid">
+
+      <!-- ADOPTION BY ACCOUNT -->
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Adoption Rate by Account</div>
+            <div class="panel-sub">Top 8 accounts by ARR</div>
+          </div>
+        </div>
+        <div class="bar-chart" id="adoptionBars"></div>
+      </div>
+
+      <!-- ONBOARDING FUNNEL -->
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Onboarding Funnel</div>
+            <div class="panel-sub">Q2 2025 — New customer pipeline</div>
+          </div>
+        </div>
+        <div class="funnel">
+          <div class="funnel-row">
+            <div class="funnel-label">Kickoff Scheduled</div>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width:100%;background:linear-gradient(90deg,rgba(99,102,241,0.6),rgba(99,102,241,0.3))">18 accounts</div>
+            </div>
+          </div>
+          <div class="funnel-row">
+            <div class="funnel-label">Onboarding Active</div>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width:83%;background:linear-gradient(90deg,rgba(0,229,190,0.5),rgba(0,229,190,0.2))">15 accounts</div>
+            </div>
+          </div>
+          <div class="funnel-row">
+            <div class="funnel-label">First Value Achieved</div>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width:67%;background:linear-gradient(90deg,rgba(16,185,129,0.5),rgba(16,185,129,0.2))">12 accounts</div>
+            </div>
+          </div>
+          <div class="funnel-row">
+            <div class="funnel-label">90-Day Complete</div>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width:50%;background:linear-gradient(90deg,rgba(245,158,11,0.5),rgba(245,158,11,0.2))">9 accounts</div>
+            </div>
+          </div>
+          <div class="funnel-row">
+            <div class="funnel-label">Healthy Status</div>
+            <div class="funnel-bar-wrap">
+              <div class="funnel-bar" style="width:39%;background:linear-gradient(90deg,rgba(239,68,68,0.5),rgba(239,68,68,0.2))">7 accounts</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ACCOUNT DETAIL OVERLAY -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail(event)">
+  <div class="detail-panel" id="detailPanel"></div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────
+const accounts = [
+  { name:"Apex Systems", tier:"Enterprise", score:42, status:"critical", adoption:31, renewal:"Jun 14", arr:"$320K", qbr:"Overdue", notes:"Low login frequency past 30 days. Champion left company. Need exec re-engagement ASAP.", action:"Schedule EBR", timeline:["Champion departure noted","Usage dropped 40%","Outreach sent — no response"] },
+  { name:"MedCore Health", tier:"Enterprise", score:88, status:"healthy", adoption:91, renewal:"Nov 02", arr:"$280K", qbr:"Completed", notes:"Strong adoption. Interested in additional module. Expansion conversation scheduled with AE.", action:"Expansion prep", timeline:["QBR completed — strong NPS","Requested product roadmap","Upsell opportunity identified"] },
+  { name:"Nexus Logistics", tier:"Mid-Market", score:51, status:"critical", adoption:44, renewal:"Jul 08", arr:"$145K", qbr:"Pending", notes:"Admin turnover. New point of contact not fully onboarded. Risk of non-renewal.", action:"Re-onboard admin", timeline:["Admin left organization","New contact assigned","Training session scheduled"] },
+  { name:"TechFlow Inc", tier:"Enterprise", score:94, status:"healthy", adoption:97, renewal:"Dec 15", arr:"$410K", qbr:"Completed", notes:"Highest NPS in portfolio. Willing to be a reference customer. Expansion of 2 teams in pipeline.", action:"Reference & expand", timeline:["Case study submitted","Expansion scoped with AE","Reference call completed"] },
+  { name:"Cascade Retail", tier:"Mid-Market", score:76, status:"healthy", adoption:72, renewal:"Sep 20", arr:"$98K", qbr:"Scheduled", notes:"Recently completed onboarding. Still ramping. Check in on feature adoption.", action:"Feature walkthrough", timeline:["Onboarding completed","Health score moved to healthy","First-90-day review done"] },
+  { name:"Summit Finance", tier:"Enterprise", score:63, status:"at-risk", adoption:58, renewal:"Aug 01", arr:"$235K", qbr:"Overdue", notes:"Budget review underway. Decision maker uncertain about ROI. Need to demonstrate value urgently.", action:"ROI review deck", timeline:["Budget freeze announced","Value review requested","QBR rescheduled twice"] },
+  { name:"Orion Healthcare", tier:"Mid-Market", score:81, status:"healthy", adoption:84, renewal:"Oct 17", arr:"$112K", qbr:"Completed", notes:"Engaged team. Attends webinars. Open to beta program participation.", action:"Beta invite", timeline:["QBR completed","Webinar attended","Beta interest expressed"] },
+  { name:"Delta Constructs", tier:"SMB", score:57, status:"at-risk", adoption:49, renewal:"Jul 22", arr:"$54K", qbr:"Pending", notes:"Low usage. May be underutilizing key features. Training session would help.", action:"Usage audit", timeline:["Low feature usage noted","Email outreach sent","Training offered"] },
+  { name:"Prism Analytics", tier:"Mid-Market", score:89, status:"healthy", adoption:93, renewal:"Jan 10", arr:"$167K", qbr:"Completed", notes:"Power users. Requesting API access and advanced reporting. Good expansion candidate.", action:"API enablement", timeline:["Advanced features adopted","API request submitted","Expansion discussed"] },
+  { name:"Cornerstone Group", tier:"Enterprise", score:44, status:"critical", adoption:36, renewal:"Jun 30", arr:"$290K", qbr:"Overdue", notes:"3rd critical account. IT team blocked rollout. Escalation to leadership needed.", action:"Exec escalation", timeline:["IT rollout blocked","Support ticket opened","CSM escalation initiated"] },
+  { name:"BlueStar Ops", tier:"SMB", score:72, status:"healthy", adoption:69, renewal:"Nov 28", arr:"$47K", qbr:"Scheduled", notes:"Consistent engagement. Small team, quick to adopt. Happy customer.", action:"QBR prep", timeline:["Onboarding smooth","Team fully adopted","QBR scheduled"] },
+  { name:"Vertex Capital", tier:"Enterprise", score:66, status:"at-risk", adoption:61, renewal:"Aug 14", arr:"$195K", qbr:"Overdue", notes:"New CTO reviewing all SaaS tools. Need to demonstrate strategic value in leadership review.", action:"Exec alignment", timeline:["CTO review announced","Intro meeting requested","Value deck in progress"] },
+];
+
+// ── RENDER TABLE ──────────────────────────────────────────────────────
+function renderTable(filter = 'all') {
+  const tbody = document.getElementById('tableBody');
+  const filtered = filter === 'all' ? accounts : accounts.filter(a => a.status === filter);
+  tbody.innerHTML = filtered.map((a, i) => `
+    <tr data-idx="${accounts.indexOf(a)}" onclick="openDetail(${accounts.indexOf(a)})">
+      <td>
+        <div class="account-name">${a.name}</div>
+        <div class="account-tier">${a.tier} · ${a.arr}</div>
+      </td>
+      <td>
+        <div class="health-score ${a.status}">
+          <div class="health-dot"></div>
+          ${a.score}/100
+        </div>
+      </td>
+      <td>
+        <div class="mini-bar-wrap">
+          <div class="mini-bar-bg">
+            <div class="mini-bar-fill" style="width:${a.adoption}%;background:${a.adoption>=70?'var(--success)':a.adoption>=45?'var(--warning)':'var(--danger)'}"></div>
+          </div>
+          <div class="mini-bar-label">${a.adoption}%</div>
+        </div>
+      </td>
+      <td>
+        <span class="renewal-badge ${getRenewalClass(a.renewal)}">${a.renewal}</span>
+      </td>
+      <td style="font-size:12px;color:var(--accent);font-family:var(--font-mono)">${a.action}</td>
+    </tr>
+  `).join('');
+}
+
+function getRenewalClass(date) {
+  const d = new Date(date + ' 2025');
+  const now = new Date();
+  const days = (d - now) / (1000*60*60*24);
+  if (days < 30) return 'soon';
+  if (days < 90) return 'upcoming';
+  return 'ok';
+}
+
+function filterTable(filter, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable(filter);
+}
+
+// ── DETAIL PANEL ──────────────────────────────────────────────────────
+function openDetail(idx) {
+  const a = accounts[idx];
+  const overlay = document.getElementById('detailOverlay');
+  const panel = document.getElementById('detailPanel');
+  const scoreColor = a.status === 'healthy' ? 'var(--success)' : a.status === 'at-risk' ? 'var(--warning)' : 'var(--danger)';
+
+  panel.innerHTML = `
+    <div class="detail-header">
+      <div>
+        <div style="font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:4px">${a.name}</div>
+        <div style="font-size:12px;color:var(--muted);font-family:var(--font-mono)">${a.tier} · ${a.arr} ARR</div>
+      </div>
+      <button class="detail-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="detail-body">
+      <div>
+        <div class="detail-section-title">Account Health</div>
+        <div class="detail-stat-grid">
+          <div class="detail-stat">
+            <div class="detail-stat-label">HEALTH SCORE</div>
+            <div class="detail-stat-val" style="color:${scoreColor}">${a.score}/100</div>
+          </div>
+          <div class="detail-stat">
+            <div class="detail-stat-label">ADOPTION RATE</div>
+            <div class="detail-stat-val">${a.adoption}%</div>
+          </div>
+          <div class="detail-stat">
+            <div class="detail-stat-label">RENEWAL DATE</div>
+            <div class="detail-stat-val" style="font-size:15px">${a.renewal}</div>
+          </div>
+          <div class="detail-stat">
+            <div class="detail-stat-label">QBR STATUS</div>
+            <div class="detail-stat-val" style="font-size:15px;color:${a.qbr==='Completed'?'var(--success)':a.qbr==='Overdue'?'var(--danger)':'var(--warning)'}">${a.qbr}</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="detail-section-title">CSM Notes</div>
+        <div class="notes-box">${a.notes}</div>
+      </div>
+      <div>
+        <div class="detail-section-title">Activity Timeline</div>
+        <div class="timeline">
+          ${a.timeline.map((t,i) => `
+            <div class="tl-item">
+              <div style="position:relative">
+                <div class="tl-dot" style="background:${i===0?'var(--accent)':'var(--muted)'}"></div>
+                ${i<a.timeline.length-1?'<div class="tl-line"></div>':''}
+              </div>
+              <div>
+                <div class="tl-text">${t}</div>
+                <div class="tl-date">${i===0?'RECENT':'EARLIER'}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <button class="action-btn">→ ${a.action}</button>
+    </div>
+  `;
+
+  overlay.classList.add('open');
+}
+
+function closeDetail(e) {
+  if (!e || e.target === document.getElementById('detailOverlay')) {
+    document.getElementById('detailOverlay').classList.remove('open');
+  }
+}
+
+// ── ADOPTION BARS ─────────────────────────────────────────────────────
+function renderAdoptionBars() {
+  const top = accounts.slice(0,8).sort((a,b) => b.adoption - a.adoption);
+  const container = document.getElementById('adoptionBars');
+  container.innerHTML = top.map(a => {
+    const col = a.adoption >= 70 ? 'var(--success)' : a.adoption >= 45 ? 'var(--warning)' : 'var(--danger)';
+    return `
+      <div class="bar-row">
+        <div class="bar-name">${a.name.split(' ')[0]}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${a.adoption}%;background:${col};opacity:0.7" data-val="${a.adoption}%"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── LIVE CLOCK ────────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.getElementById('liveTime').textContent = now.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── INIT ──────────────────────────────────────────────────────────────
+renderTable();
+renderAdoptionBars();
+</script>
+</body>
+</html>
